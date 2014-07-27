@@ -27,7 +27,7 @@
 	<br/>
 
 	<span>125Hz</span>
-	<input class="slider bandpass" data-gainstage="1" type="range" min="0.0" max="1.0" step="0.01" value="0" oninput="filterGainHandler(this);"/>
+	<input class="slider bandpass" data-gainstage="1" type="range" min="0" max="1" step="0.01" value="0" oninput="filterGainHandler(this);"/>
 	<br/>
 
 	<span>175Hz</span>
@@ -81,27 +81,25 @@
 
 <script>
 
-	var contextClass;
-	var context;
-	var source;
-	var filterBank;
+	var contextClass = null,
+		context = null,
+		source = null,
+		filterBank = null;
 
 	var filterGainHandler = function(e) {
-		var fraction = parseFloat(e.value) / parseFloat(e.max);
-		var factor = Math.pow(fraction, 2);
-		var gainStage = filterBank.gainStages[+e.getAttribute('data-gainstage')];
+		var fraction = parseFloat(e.value) / parseFloat(e.max),
+			factor = Math.pow(fraction, 2),
+			gainStage = filterBank.gainStages[+e.getAttribute('data-gainstage')];
 
 		gainStage.gain.setValueAtTime(factor, context.currentTime);
 	}
 
 	var wetDryHandler = function(e) {
-		var val = parseFloat(e.value);
-		var max = parseFloat(e.max);
-
-		var fraction = parseFloat(val / max);
-
-		var wetFactor = Math.pow(fraction, 2);
-		var dryFactor = Math.pow((1 - fraction), 2);
+		var val = parseFloat(e.value),
+			max = parseFloat(e.max),
+			fraction = parseFloat(val / max),
+			wetFactor = Math.pow(fraction, 2),
+			dryFactor = Math.pow((1 - fraction), 2);
 
 		if (val == 0) {
 			wetFactor = 0;
@@ -126,9 +124,6 @@
 
 		filterBank = new ResonantFilterBank(context);
 
-		filterBank.wetGain.gain.setValueAtTime(0, context.currentTime);
-		filterBank.dryGain.gain.setValueAtTime(1, context.currentTime);
-
 		source.connect(filterBank.audioIn);
 		filterBank.connect(context.destination);
 	});
@@ -136,47 +131,47 @@
 	var ResonantFilterBank = (function(context) {
 
 		var ResonantFilterBank = function(context) {
+			this.context = context;
 			this.filters = [];
 			this.gainStages = [];
-			this.audioIn = context.createGain();
-			this.audioOut = context.createGain();
-			this.wetGain = context.createGain();
-			this.dryGain = context.createGain();
-			this.compressor = context.createDynamicsCompressor();
+			this.audioIn = this.context.createGain();
+			this.audioOut = this.context.createGain();
+			this.wetGain = this.context.createGain();
+			this.dryGain = this.context.createGain();
+			this.compressor = this.context.createDynamicsCompressor();
 
-			this.compressor.threshold.setValueAtTime(-56, context.currentTime);
+			this.wetGain.gain.setValueAtTime(0, this.context.currentTime);
+			this.dryGain.gain.setValueAtTime(1, this.context.currentTime);
+			this.compressor.threshold.setValueAtTime(-56, this.context.currentTime);
 
 			this.compressor.connect(this.wetGain);
 			this.audioIn.connect(this.dryGain);
 			this.wetGain.connect(this.audioOut);
 			this.dryGain.connect(this.audioOut);
-			this.audioOut.connect(context.destination);
+			this.audioOut.connect(this.context.destination);
 
-			this.makeFilters(context);
+			this.makeFilters();
 		}
 
 		ResonantFilterBank.prototype.constructor = ResonantFilterBank;
 
-		ResonantFilterBank.prototype.makeFilters = function(context) {
-			var copy = this;
-
-			var bands = [0, 37, 50, 75, 100, 250, 250, 250, 400, 600, 800, 1200, 1600, 1400];
-			var baseFreq = 88;
-			var baseQ = 400;
+		ResonantFilterBank.prototype.makeFilters = function() {
+			var copy = this,
+				context = this.context,
+				bands = [0, 37, 50, 75, 100, 250, 250, 250, 400, 600, 800, 1200, 1600, 1400],
+				baseFreq = 88,
+				baseQ = 400;
 
 			var makeFilter = function(i, band) {
-				var filter = context.createBiquadFilter();
-				var filterType = "bandpass";
-				var freq = baseFreq + band;
-				var q = baseQ;
-				var gain = 0;
+				var filter = context.createBiquadFilter(),
+					filterType = "bandpass",
+					freq = baseFreq + band,
+					q = baseQ,
+					gain = 0;
 
-				if (i == 0) {
-					filterType = "lowpass";
+				if (i == 0 || i == (bands.length - 1)) {
 					q = 30;
-				} else if (i == (bands.length - 1)) {
-					filterType = "highpass";
-					q = 30;
+					filterType = (i == 0) ? "lowpass" : "highpass";
 				} else {
 					gain = 20;
 				}
@@ -200,9 +195,9 @@
 			}
 
 			for (var i = 0, ii=bands.length; i < ii; i++) {
-				var band = bands[i];
-				var filter = makeFilter(i, band);
-				var gainStage = makeGainStage();
+				var band = bands[i],
+					filter = makeFilter(i, band),
+					gainStage = makeGainStage();
 
 				filter.connect(gainStage);
 
