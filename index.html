@@ -140,20 +140,26 @@
 			this.dryGain = this.context.createGain();
 			this.compressor = this.context.createDynamicsCompressor();
 
-			this.wetGain.gain.setValueAtTime(0, this.context.currentTime);
-			this.dryGain.gain.setValueAtTime(1, this.context.currentTime);
-			this.compressor.threshold.setValueAtTime(-56, this.context.currentTime);
-
-			this.compressor.connect(this.wetGain);
-			this.audioIn.connect(this.dryGain);
-			this.wetGain.connect(this.audioOut);
-			this.dryGain.connect(this.audioOut);
-			this.audioOut.connect(this.context.destination);
-
-			this.makeFilters();
+			this.init();
 		}
 
 		ResonantFilterBank.prototype.constructor = ResonantFilterBank;
+
+		ResonantFilterBank.prototype.init = function() {
+			var copy = this;
+
+			copy.wetGain.gain.setValueAtTime(0, copy.context.currentTime);
+			copy.dryGain.gain.setValueAtTime(1, copy.context.currentTime);
+			copy.compressor.threshold.setValueAtTime(-56, copy.context.currentTime);
+
+			copy.compressor.connect(copy.wetGain);
+			copy.audioIn.connect(copy.dryGain);
+			copy.wetGain.connect(copy.audioOut);
+			copy.dryGain.connect(copy.audioOut);
+			copy.audioOut.connect(copy.context.destination);
+
+			copy.makeFilters();
+		}
 
 		ResonantFilterBank.prototype.makeFilters = function() {
 			var copy = this,
