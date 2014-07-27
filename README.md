@@ -3,12 +3,14 @@ ResonantFilterBank
 
 A Web Audio API fixed frequency resonant filter bank based roughly on the architecture of the Moog 914 module.
 
-Next things I want to add:
+Next things I want to do:
 
-&bull; Controls for filter frequency and resonance
+&bull; Debug for Safari and Firefox
 
-&bull; Argument to set number of filters to build
+&bull; Add controls for filter frequency and resonance
 
-&bull; Implementation of Zach Denton's custom-built filters: http://noisehack.com/custom-audio-effects-javascript-web-audio-api/
+&bull; Add argument to set number of filters to build
 
-&bull; Implementation of a modulation matrix
+&bull; Implement Zach Denton's custom-built filters: http://noisehack.com/custom-audio-effects-javascript-web-audio-api/
+
+&bull; Implement a modulation matrix
