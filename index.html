@@ -128,6 +128,72 @@
 		filterBank.connect(context.destination);
 	});
 
+	// first we're going to want a class for a delay line, so that when we're
+	// constructing the FilterTaps we can just instantiate a bunch of DelayLines
+
+	var DelayLine = (function(context) {
+
+		var DelayLine = function(context) {
+			this.context = context;
+			this.audioIn = this.context.createGain();
+			this.audioOut = this.context.createGain();
+			this.delay = this.context.createDelay();
+			this.filter = this.context.createBiquadFilter();
+
+			this.init();
+		}
+
+		DelayLine.prototype.constructor = DelayLine;
+
+		DelayLine.prototype.init = function() {
+			// init function
+			var self = this,
+				context = self.context;
+
+			self.audioIn.connect(self.delay);
+			self.delay.connect(self.filter);
+			self.filter.connect(self.audioOut);
+			self.audioOut.connect(context.destination);
+		}
+
+		DelayLine.prototype.connect = function(node) {
+			this.audioOut.connect(node);
+		}
+
+		return DelayLine;
+
+	})();
+
+	var FilterTaps = (function(context) {
+
+		var FilterTaps = function(context) {
+			// constructor
+			this.context = context;
+			this.delayLines = [];
+			this.audioIn = this.context.createGain();
+			this.audioOut = this.context.createGain();
+			this.
+
+			this.init();
+		}
+
+		FilterTaps.prototype.constructor = FilterTaps;
+
+		FilterTaps.prototype.init = function() {
+			var self = this,
+				context = self.context;
+
+			// init;
+		}
+
+		FilterTaps.prototype.connect = function(node) {
+			this.audioOut.connect(node);
+		}
+
+		return FilterTaps;
+
+	})();
+
 	var ResonantFilterBank = (function(context) {
 
 		var ResonantFilterBank = function(context) {
@@ -146,24 +212,25 @@
 		ResonantFilterBank.prototype.constructor = ResonantFilterBank;
 
 		ResonantFilterBank.prototype.init = function() {
-			var copy = this;
+			var self = this,
+				context = self.context;
 
-			copy.wetGain.gain.setValueAtTime(0, copy.context.currentTime);
-			copy.dryGain.gain.setValueAtTime(1, copy.context.currentTime);
-			copy.compressor.threshold.setValueAtTime(-56, copy.context.currentTime);
+			self.wetGain.gain.setValueAtTime(0, context.currentTime);
+			self.dryGain.gain.setValueAtTime(1, context.currentTime);
+			self.compressor.threshold.setValueAtTime(-56, context.currentTime);
 
-			copy.compressor.connect(copy.wetGain);
-			copy.audioIn.connect(copy.dryGain);
-			copy.wetGain.connect(copy.audioOut);
-			copy.dryGain.connect(copy.audioOut);
-			copy.audioOut.connect(copy.context.destination);
+			self.compressor.connect(self.wetGain);
+			self.audioIn.connect(self.dryGain);
+			self.wetGain.connect(self.audioOut);
+			self.dryGain.connect(self.audioOut);
+			self.audioOut.connect(context.destination);
 
-			copy.makeFilters();
+			self.makeFilters();
 		}
 
 		ResonantFilterBank.prototype.makeFilters = function() {
-			var copy = this,
-				context = this.context,
+			var self = this,
+				context = self.context,
 				bands = [0, 37, 50, 75, 100, 250, 250, 250, 400, 600, 800, 1200, 1600, 1400],
 				baseFreq = 88,
 				baseQ = 400;
@@ -186,7 +253,7 @@
 				filter.gain.setValueAtTime(gain, context.currentTime);
 				filter.Q.setValueAtTime(q, context.currentTime);
 				filter.frequency.setValueAtTime(freq, context.currentTime);
-				copy.audioIn.connect(filter);
+				self.audioIn.connect(filter);
 
 				return filter;
 			}
@@ -195,7 +262,7 @@
 				var gainStage = context.createGain();
 
 				gainStage.gain.setValueAtTime(0, context.currentTime);
-				gainStage.connect(copy.compressor);
+				gainStage.connect(self.compressor);
 
 				return gainStage;
 			}
@@ -207,8 +274,8 @@
 
 				filter.connect(gainStage);
 
-				copy.filters.push(filter);
-				copy.gainStages.push(gainStage);
+				self.filters.push(filter);
+				self.gainStages.push(gainStage);
 			}
 		}
 
